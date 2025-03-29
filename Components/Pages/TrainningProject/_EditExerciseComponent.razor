@@ -1,0 +1,91 @@
+﻿@using Client_ui.Service
+@using Client_ui.Components.Enum
+@using Client_ui.Domain.DTO
+@using MudBlazor
+@using MudBlazor.Services
+@inject IExerciseService ExerciseService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Exercise.ExerciseName"
+                                  Label="Nazwa Ćwiczenia"
+                                  Required="true"
+                                  RequiredError="Nazwa ćwiczenia jest wymagana"
+                                  Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="Exercise.ExerciseSets"
+                                     Label="Liczba Serii"
+                                     Required="true"
+                                     RequiredError="Liczba serii jest wymagana"
+                                     Min="1"
+                                     Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="Exercise.ExerciseReps"
+                                     Label="Liczba Powtórzeń"
+                                     Required="true"
+                                     RequiredError="Liczba powtórzeń jest wymagana"
+                                     Min="1"
+                                     Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">   
+                    <MudNumericField @bind-Value="Exercise.ExerciseWeight"
+                                     Label="Ciężar (kg)"
+                                     Required="true"
+                                     RequiredError="Ciężar jest wymagany"
+                                     Min="0"
+                                     Class="mb-4" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Anuluj</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">Zapisz</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public ExerciseDTOs Exercise { get; set; } = default!;
+
+    private MudForm form = new();
+    private bool success;
+
+    private async Task Submit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            try
+            {
+                var editExercise = new EditExercises
+                    {
+                        Id = Exercise.Id,
+                        ExerciseName = Exercise.ExerciseName,
+                        Category = Exercise.Category,
+                        ExerciseWeight = Exercise.ExerciseWeight,
+                        ExerciseReps = Exercise.ExerciseReps,
+                        ExerciseSets = Exercise.ExerciseSets,
+                        ExerciseTime = Exercise.ExerciseTime,
+                        ExerciseQuality = Exercise.ExerciseQuality
+                    };
+
+                await ExerciseService.UpdateExercise(editExercise);
+                Snackbar.Add("Ćwiczenie zostało zaktualizowane", Severity.Success);
+                Dialog.Close(DialogResult.Ok(Exercise));
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Nie udało się zaktualizować ćwiczenia: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => Dialog.Close();
+}

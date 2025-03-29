@@ -1,0 +1,125 @@
+﻿@using Client_ui.Service
+@using Client_ui.Domain.DTO
+@using MudBlazor
+@inject IWorkoutService workoutService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="workout.WorkoutName"
+                              Label="Nazwa Treningu"
+                              Required="true"
+                              RequiredError="Nazwa treningu jest wymagana" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudDatePicker Date="@workout.WorkoutDate"
+                               DateChanged="@(date => OnDateChanged(date))"
+                               Label="Data Treningu"
+                               Required="true"
+                               RequiredError="Data treningu jest wymagana" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudSlider @bind-Value="workout.WorkoutQuality"
+                           label="Jakość"
+                           Min="1"
+                           Max="10"
+                           ValueLabel="true" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Anuluj</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@(() => Submit())">Zapisz</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public WorkoutDTOs Workout { get; set; } = default!;
+
+    private WorkoutDTOs workout = new();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            Console.WriteLine("Rozpoczynam inicjalizację komponentu edycji treningu");
+            if (Workout == null)
+            {
+                Console.WriteLine("Workout jest null!");
+                Snackbar.Add("Nie udało się załadować danych treningu", Severity.Error);
+                MudDialog.Cancel();
+                return;
+            }
+
+            Console.WriteLine($"Otrzymano trening do edycji: Id={Workout.Id}, Nazwa={Workout.WorkoutName}");
+            workout = new WorkoutDTOs
+                {
+                    Id = Workout.Id,
+                    WorkoutName = Workout.WorkoutName,
+                    WorkoutDate = Workout.WorkoutDate,
+                    WorkoutQuality = Workout.WorkoutQuality,
+                    WorkoutTime = Workout.WorkoutTime,
+                    WorkoutVolume = Workout.WorkoutVolume
+                };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd podczas inicjalizacji: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Snackbar.Add("Wystąpił błąd podczas ładowania danych", Severity.Error);
+            MudDialog.Cancel();
+        }
+    }
+
+    private void OnDateChanged(DateTime? date)
+    {
+        if (date.HasValue)
+        {
+            workout.WorkoutDate = date.Value;
+        }
+    }
+
+    private async Task Submit()
+    {
+        Console.WriteLine("Rozpoczynam próbę zapisu treningu");
+        if (string.IsNullOrEmpty(workout.WorkoutName))
+        {
+            Console.WriteLine("Submit: nazwa treningu jest pusta!");
+            Snackbar.Add("Nazwa treningu jest wymagana", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"Próba aktualizacji treningu: {workout.Id}");
+            Console.WriteLine($"Nazwa: {workout.WorkoutName}");
+            Console.WriteLine($"Data: {workout.WorkoutDate}");
+            Console.WriteLine($"Jakość: {workout.WorkoutQuality}");
+
+            var updateWorkout = new UpdateWorkoutDTO
+                {
+                    Id = workout.Id,
+                    WorkoutName = workout.WorkoutName,
+                    WorkoutDate = workout.WorkoutDate,
+                    WorkoutQuality = (int)workout.WorkoutQuality
+                };
+
+            await workoutService.UpdateWorkoutAsync(updateWorkout);
+            Console.WriteLine("Trening został zaktualizowany pomyślnie");
+            MudDialog.Close(DialogResult.Ok(workout));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd podczas aktualizacji treningu: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Snackbar.Add($"Nie udało się zaktualizować treningu: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

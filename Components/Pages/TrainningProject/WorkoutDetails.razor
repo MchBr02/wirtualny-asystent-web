@@ -1,0 +1,211 @@
+﻿@using Client_ui.Domain.DTO
+@using Client_ui.Components.Pages.TrainningProject
+@using Client_ui.Service
+@using static Client_ui.Domain.DTO.AddExercises
+@inject IExerciseService exerciseService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+@page "/WorkoutDetails/{name}/{Id:guid}"
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudPaper Class="pa-4" Elevation="3">
+        <MudGrid>
+            <MudItem xs="12" Class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h4" Class="mb-0">@name</MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenDialogMenu">
+                    Dodaj Ćwiczenie
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="0" Style="background: var(--mud-palette-primary-lighten)">
+                    <MudText Typo="Typo.h6" Class="mb-2">Łączna Objętość</MudText>
+                    <MudText Typo="Typo.h4">@volume.ToString("N0") kg</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="0" Style="background: var(--mud-palette-secondary-lighten)">
+                    <MudText Typo="Typo.h6" Class="mb-2">Łączny Czas</MudText>
+                    <MudText Typo="Typo.h4">@czas.ToString(@"mm\:ss")</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else if (!exerciseDTOs.Any())
+                {
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Brak ćwiczeń w tym treningu</MudText>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   OnClick="OpenDialogMenu">
+                            Dodaj pierwsze ćwiczenie
+                        </MudButton>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudTable T="ExerciseDTOs"
+                              Items="@exerciseDTOs"
+                              Hover="true"
+                              Bordered="true"
+                              Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>Nazwa Ćwiczenia</MudTh>
+                            <MudTh>Czężar</MudTh>
+                            <MudTh>Liczba Powtórzeń</MudTh>
+                            <MudTh>Liczba Serii</MudTh>
+                            <MudTh>Czas Ćwiczenia</MudTh>
+                            <MudTh>Objetość</MudTh>
+                            <MudTh>Akcje</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.ExerciseName</MudTd>
+                            <MudTd>@context.ExerciseWeight.ToString("N0") kg</MudTd>
+                            <MudTd>@context.ExerciseReps</MudTd>
+                            <MudTd>@context.ExerciseSets</MudTd>
+                            <MudTd>@context.ExerciseTime.ToString(@"mm\:ss")</MudTd>
+                            <MudTd>@context.ExerciseVolume.ToString("N0") kg</MudTd>
+                            <MudTd>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteExercise(context.Id))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenEditExerciseDialog(context))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private float volume;
+    private TimeSpan czas;
+    private bool _loading = true;
+    private List<ExerciseDTOs> exerciseDTOs = new();
+    [Parameter]
+    public Guid Id { get; set; }
+    [Parameter]
+    public string name { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployees();
+    }
+
+    private async Task LoadEmployees()
+    {
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var exercises = await exerciseService.GetAllExercisesByWorkoutId(Id);
+            exerciseDTOs = exercises?.ToList() ?? new List<ExerciseDTOs>();
+            volume = await exerciseService.GetWorkoutVolume(Id);
+            czas = await exerciseService.GetTotalExerciseTime(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Nie udało się załadować ćwiczeń", Severity.Error);
+            ex.Message.ToString();
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenDialogMenu()
+    {
+        var parameters = new DialogParameters
+        {
+            { "WartoscId", Id }
+        };
+
+        var dialog = await DialogService.ShowAsync<_CreateExerciseComponent>(
+            "Dodaj Ćwiczenie",
+            parameters,
+            new DialogOptions
+                {
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                    CloseButton = true,
+                    CloseOnEscapeKey = true
+                }
+        );
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadEmployees();
+            Snackbar.Add("Ćwiczenie zostało dodane", Severity.Success);
+        }
+    }
+
+    private async Task DeleteExercise(Guid id)
+    {
+        if (exerciseDTOs == null || !exerciseDTOs.Any()) return;
+
+        var dialog = await DialogService.ShowMessageBox(
+            "Usuń ćwiczenie",
+            "Czy na pewno chcesz usunąć to ćwiczenie?",
+            yesText: "Usuń", noText: "Anuluj");
+
+        if (dialog == true)
+        {
+            try
+            {
+                await exerciseService.DeleteExercise(id);
+                await LoadEmployees();
+                Snackbar.Add("Ćwiczenie zostało usunięte", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Nie udało się usunąć ćwiczenia: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenEditExerciseDialog(ExerciseDTOs exercise)
+    {
+        if (exercise == null || string.IsNullOrEmpty(exercise.ExerciseName)) return;
+
+        var parameters = new DialogParameters
+        {
+            { "Exercise", exercise }
+        };
+
+        var dialog = await DialogService.ShowAsync<_EditExerciseComponent>(
+            "Edytuj Ćwiczenie",
+            parameters,
+            new DialogOptions
+                {
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                    CloseButton = true,
+                    CloseOnEscapeKey = true
+                }
+        );
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadEmployees();
+            Snackbar.Add("Ćwiczenie zostało zaktualizowane", Severity.Success);
+        }
+    }
+}

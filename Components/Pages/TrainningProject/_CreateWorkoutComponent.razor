@@ -1,0 +1,167 @@
+﻿@using Client_ui.Service
+@using Client_ui.Components.Enum
+@using Client_ui.Domain.DTO
+@using MudBlazor
+@using MudBlazor.Services
+@inject IExerciseService ExerciseService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="string"
+                               @bind-Value="addExercises.Category"
+                               Label="Kategoria"
+                               Required="true"
+                               RequiredError="Kategoria jest wymagana"
+                               Class="mb-4">
+                        @foreach (var category in Enum.GetNames(typeof(CategoryExerciseEnum)))
+                        {
+                            <MudSelectItem Value="@category">@category</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudAutocomplete T="string"
+                                     @bind-Value="addExercises.ExerciseName"
+                                     Label="Nazwa Ćwiczenia"
+                                     Required="true"
+                                     RequiredError="Nazwa ćwiczenia jest wymagana"
+                                     SearchFunc="@Search2"
+                                     OpenIcon="@Icons.Material.Filled.ArrowDropDown"
+                                     ClearIcon="@Icons.Material.Filled.Clear"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Search"
+                                     Class="mb-4"
+                                     Immediate="true"
+                                     CoerceText="true"
+                                     CoerceValue="true"
+                                     ResetValueOnEmptyText="true"
+                                     MaxItems="25" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="addExercises.ExerciseWeight"
+                                     Label="Ciężar (kg)"
+                                     Required="true"
+                                     RequiredError="Ciężar jest wymagany"
+                                     Min="0"
+                                     Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="addExercises.ExerciseReps"
+                                     Label="Liczba Powtórzeń"
+                                     Required="true"
+                                     RequiredError="Liczba powtórzeń jest wymagana"
+                                     Min="1"
+                                     Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="addExercises.ExerciseSets"
+                                     Label="Liczba Serii"
+                                     Required="true"
+                                     RequiredError="Liczba serii jest wymagana"
+                                     Min="1"
+                                     Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Value="@timeString"
+                                  ValueChanged="@(new EventCallback<string>(this, OnTimeChangeAsync))"
+                                  Label="Czas Ćwiczenia (mm:ss)"
+                                  Required="true"
+                                  RequiredError="Czas ćwiczenia jest wymagany"
+                                  Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="addExercises.ExerciseQuality"
+                                     Label="Jakość Ćwiczenia"
+                                     Required="true"
+                                     RequiredError="Jakość ćwiczenia jest wymagana"
+                                     Min="1"
+                                     Max="5"
+                                     Class="mb-4" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Anuluj</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">Dodaj</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance Dialog { get; set; } = default!;
+    [Parameter] public Guid WartoscId { get; set; }
+
+    private MudForm form = new();
+    private bool success;
+    private Client_ui.Domain.DTO.AddExercises addExercises = new()
+        {
+            ExerciseName = string.Empty,
+            Category = string.Empty,
+            ExerciseWeight = 0,
+            ExerciseReps = 0,
+            ExerciseSets = 0,
+            ExerciseTime = new TimeSpan(0, 0, 0),
+            ExerciseQuality = 5,
+            WorkoutFK = Guid.Empty
+        };
+    private string timeString = "00:00";
+
+    protected override void OnInitialized()
+    {
+        addExercises.WorkoutFK = WartoscId;
+    }
+
+    private async Task<IEnumerable<string>> Search2(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(addExercises.Category))
+        {
+            return Array.Empty<string>();
+        }
+
+        var exercises = ExerciseService.GetExercisesForCategory(addExercises.Category);
+        Console.WriteLine($"Selected category: {addExercises.Category}");
+        Console.WriteLine($"Available exercises: {string.Join(", ", exercises)}");
+
+        if (string.IsNullOrEmpty(value))
+        {
+            return exercises;
+        }
+
+        var filtered = exercises.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        Console.WriteLine($"Filtered exercises: {string.Join(", ", filtered)}");
+        return filtered;
+    }
+
+    private void OnTimeChangeAsync(string value)
+    {
+        timeString = value;
+        if (TimeSpan.TryParse("00:" + value.PadLeft(5, '0'), out TimeSpan time))
+        {
+            addExercises.ExerciseTime = time;
+        }
+    }
+
+    private async Task Submit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            try
+            {
+                await ExerciseService.CreateExercise(addExercises);
+                Snackbar.Add("Ćwiczenie zostało dodane", Severity.Success);
+                Dialog.Close(DialogResult.Ok(addExercises));
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Nie udało się dodać ćwiczenia: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => Dialog.Close();
+}

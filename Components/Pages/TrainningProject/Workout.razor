@@ -1,0 +1,190 @@
+﻿@page "/Workout"
+@using Client_ui.Domain.DTO;
+@using Client_ui.Service;
+@using MudBlazor;
+@inject IWorkoutService workoutService;
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudPaper Class="pa-4" Elevation="3">
+        <MudGrid>
+            <MudItem xs="12" Class="d-flex justify-space-between align-center mb-4">
+                <MudText Typo="Typo.h4" Class="mb-0">Lista Treningów</MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenDialogMenu">
+                    Dodaj Trening
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="12">
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else if (!workoutDTOs.Any())
+                {
+                    <MudPaper Class="pa-4" Elevation="0">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Brak treningów</MudText>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   OnClick="OpenDialogMenu">
+                            Dodaj pierwszy trening
+                        </MudButton>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudTable T="WorkoutDTOs"
+                              Items="@workoutDTOs"
+                              Hover="true"
+                              Bordered="true"
+                              Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>Nazwa Treningu</MudTh>
+                            <MudTh>Data</MudTh>
+                            <MudTh>Czas</MudTh>
+                            <MudTh>Objetość</MudTh>
+                            <MudTh>Jakość Treningu</MudTh>
+                            <MudTh>Akcje</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.WorkoutName</MudTd>
+                            <MudTd>@context.WorkoutDate.ToShortDateString()</MudTd>
+                            <MudTd>@context.WorkoutTime.ToString(@"mm\:ss")</MudTd>
+                            <MudTd>@context.WorkoutVolume.ToString("N0") kg</MudTd>
+                            <MudTd><MudRating SelectedValue="@context.WorkoutQuality" /></MudTd>
+                            <MudTd>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               OnClick="@(() => DeleteWorkout(context.Id))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               OnClick="@(() => OpenEditDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                               Color="Color.Info"
+                                               OnClick="@(() => NavigateToWorkoutDetails(context.WorkoutName ?? string.Empty, context.Id))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _loading = true;
+    private List<WorkoutDTOs> workoutDTOs = new();
+    private WorkoutDTOs? selectedWorkout;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkouts();
+    }
+
+    private async Task LoadWorkouts()
+    {
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var workouts = await workoutService.GetAllWorkoutDTOsAsync();
+            workoutDTOs = workouts?.ToList() ?? new List<WorkoutDTOs>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Nie udało się załadować treningów", Severity.Error);
+            ex.Message.ToString();
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenDialogMenu()
+    {
+        var dialog = await DialogService.ShowAsync<_CreateWorkoutComponent>(
+            "Dodaj Trening",
+            new DialogOptions
+                {
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                    CloseButton = true,
+                    CloseOnEscapeKey = true
+                }
+        );
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadWorkouts();
+            Snackbar.Add("Trening został dodany", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(WorkoutDTOs workout)
+    {
+        if (workout == null || string.IsNullOrEmpty(workout.WorkoutName)) return;
+
+        selectedWorkout = workout;
+        var parameters = new DialogParameters
+        {
+            { "Workout", workout }
+        };
+
+        var dialog = await DialogService.ShowAsync<_EditWorkoutComponent>(
+            "Edytuj Trening",
+            parameters,
+            new DialogOptions
+                {
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true,
+                    CloseButton = true,
+                    CloseOnEscapeKey = true
+                }
+        );
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await LoadWorkouts();
+            Snackbar.Add("Trening został zaktualizowany", Severity.Success);
+        }
+    }
+
+    private async Task DeleteWorkout(Guid id)
+    {
+        if (workoutDTOs == null || !workoutDTOs.Any()) return;
+
+        var dialog = await DialogService.ShowMessageBox(
+            "Usuń trening",
+            "Czy na pewno chcesz usunąć ten trening?",
+            yesText: "Usuń", noText: "Anuluj");
+
+        if (dialog == true)
+        {
+            try
+            {
+                await workoutService.DeleteWorkoutAsync(id);
+                await LoadWorkouts();
+                Snackbar.Add("Trening został usunięty", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Nie udało się usunąć treningu: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void NavigateToWorkoutDetails(string name, Guid id)
+    {
+        if (string.IsNullOrEmpty(name)) return;
+        NavigationManager.NavigateTo($"/WorkoutDetails/{name}/{id}");
+    }
+}
