@@ -2,105 +2,141 @@
 @using Client_ui.Domain.DTO;
 @using Client_ui.Service;
 @using MudBlazor;
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IWorkoutService workoutService;
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
-    <MudPaper Class="pa-4" Elevation="3">
-        <MudGrid>
-            <MudItem xs="12" Class="d-flex justify-space-between align-center mb-4">
-                <MudText Typo="Typo.h4" Class="mb-0">Lista Treningów</MudText>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Large"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenDialogMenu">
-                    Dodaj Trening
-                </MudButton>
-            </MudItem>
 
-            <MudItem xs="12">
-                @if (_loading)
-                {
-                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
-                }
-                else if (!workoutDTOs.Any())
-                {
-                    <MudPaper Class="pa-4" Elevation="0">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Brak treningów</MudText>
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Primary"
-                                   FullWidth="true"
-                                   OnClick="OpenDialogMenu">
-                            Dodaj pierwszy trening
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+            <p>@currentUserId</p>
+            <MudPaper Class="pa-4" Elevation="3">
+                <MudGrid>
+                    <MudItem xs="12" Class="d-flex justify-space-between align-center mb-4">
+                        <MudText Typo="Typo.h4" Class="mb-0">Lista Treningów</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                Color="Color.Primary"
+                                Size="Size.Large"
+                                StartIcon="@Icons.Material.Filled.Add"
+                                OnClick="OpenDialogMenu">
+                            Dodaj Trening
                         </MudButton>
-                    </MudPaper>
-                }
-                else
-                {
-                    <MudTable T="WorkoutDTOs"
-                              Items="@workoutDTOs"
-                              Hover="true"
-                              Bordered="true"
-                              Breakpoint="Breakpoint.Sm">
-                        <HeaderContent>
-                            <MudTh>Nazwa Treningu</MudTh>
-                            <MudTh>Data</MudTh>
-                            <MudTh>Czas</MudTh>
-                            <MudTh>Objetość</MudTh>
-                            <MudTh>Jakość Treningu</MudTh>
-                            <MudTh>Akcje</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd>@context.WorkoutName</MudTd>
-                            <MudTd>@context.WorkoutDate.ToShortDateString()</MudTd>
-                            <MudTd>@context.WorkoutTime.ToString(@"mm\:ss")</MudTd>
-                            <MudTd>@context.WorkoutVolume.ToString("N0") kg</MudTd>
-                            <MudTd><MudRating SelectedValue="@context.WorkoutQuality" /></MudTd>
-                            <MudTd>
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               OnClick="@(() => DeleteWorkout(context.Id))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               OnClick="@(() => OpenEditDialog(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Info"
-                                               Color="Color.Info"
-                                               OnClick="@(() => NavigateToWorkoutDetails(context.WorkoutName ?? string.Empty, context.Id))" />
-                            </MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                }
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-</MudContainer>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        @if (_loading)
+                        {
+                            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                        }
+                        else if (!workoutDTOs.Any())
+                        {
+                            <MudPaper Class="pa-4" Elevation="0">
+                                <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Brak treningów</MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                        Color="Color.Primary"
+                                        FullWidth="true"
+                                        OnClick="OpenDialogMenu">
+                                    Dodaj pierwszy trening
+                                </MudButton>
+                            </MudPaper>
+                        }
+                        else
+                        {
+                            <MudTable T="WorkoutDTOs"
+                                    Items="@workoutDTOs"
+                                    Hover="true"
+                                    Bordered="true"
+                                    Breakpoint="Breakpoint.Sm">
+                                <HeaderContent>
+                                    <MudTh>Nazwa Treningu</MudTh>
+                                    <MudTh>Data</MudTh>
+                                    <MudTh>Czas</MudTh>
+                                    <MudTh>Objetość</MudTh>
+                                    <MudTh>Jakość Treningu</MudTh>
+                                    <MudTh>Akcje</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.WorkoutName</MudTd>
+                                    <MudTd>@context.WorkoutDate.ToShortDateString()</MudTd>
+                                    <MudTd>@context.WorkoutTime.ToString(@"mm\:ss")</MudTd>
+                                    <MudTd>@context.WorkoutVolume.ToString("N0") kg</MudTd>
+                                    <MudTd><MudRating SelectedValue="@context.WorkoutQuality" /></MudTd>
+                                    <MudTd>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                    Color="Color.Error"
+                                                    OnClick="@(() => DeleteWorkout(context.Id))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                    Color="Color.Primary"
+                                                    OnClick="@(() => OpenEditDialog(context))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                                    Color="Color.Info"
+                                                    OnClick="@(() => NavigateToWorkoutDetails(context.WorkoutName ?? string.Empty, context.Id))" />
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudContainer>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+                Musisz się zalogować, aby zobaczyć treningi.
+            </MudAlert>
+            <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                Przejdź do logowania
+            </MudButton>
+        </MudContainer>
+
 
 @code {
     private bool _loading = true;
     private List<WorkoutDTOs> workoutDTOs = new();
     private WorkoutDTOs? selectedWorkout;
+    private Guid currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
+        await GetCurrentUserId();
         await LoadWorkouts();
+    }
+
+    private async Task GetCurrentUserId()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Get the user ID from the NameIdentifier claim
+            var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
+            {
+                currentUserId = userId;
+            }
+        }
     }
 
     private async Task LoadWorkouts()
     {
+        //if (currentUserId == Guid.Empty)
+          //  return;
+            
         try
         {
             _loading = true;
             StateHasChanged();
-            var workouts = await workoutService.GetAllWorkoutDTOsAsync();
+            
+            // Get workouts only for the current user
+            var workouts = await workoutService.GetWorkoutsByUserIdAsync(currentUserId);
             workoutDTOs = workouts?.ToList() ?? new List<WorkoutDTOs>();
         }
         catch (Exception ex)
         {
             Snackbar.Add("Nie udało się załadować treningów", Severity.Error);
-            ex.Message.ToString();
+            Console.WriteLine(ex.Message);
         }
         finally
         {
@@ -111,8 +147,17 @@
 
     private async Task OpenDialogMenu()
     {
+        if (currentUserId == Guid.Empty)
+            return;
+            
+        var parameters = new DialogParameters
+        {
+            { "UserId", currentUserId }
+        };
+            
         var dialog = await DialogService.ShowAsync<_CreateWorkoutComponent>(
             "Dodaj Trening",
+            parameters,
             new DialogOptions
                 {
                     MaxWidth = MaxWidth.Small,
@@ -132,6 +177,13 @@
     private async Task OpenEditDialog(WorkoutDTOs workout)
     {
         if (workout == null || string.IsNullOrEmpty(workout.WorkoutName)) return;
+
+        // Verify this is the user's workout
+        if (workout.UserId != currentUserId)
+        {
+            Snackbar.Add("Nie masz uprawnień do edycji tego treningu", Severity.Warning);
+            return;
+        }
 
         selectedWorkout = workout;
         var parameters = new DialogParameters
@@ -161,6 +213,14 @@
     private async Task DeleteWorkout(Guid id)
     {
         if (workoutDTOs == null || !workoutDTOs.Any()) return;
+        
+        // Find the workout and verify ownership
+        var workout = workoutDTOs.FirstOrDefault(w => w.Id == id);
+        if (workout == null || workout.UserId != currentUserId)
+        {
+            Snackbar.Add("Nie masz uprawnień do usunięcia tego treningu", Severity.Warning);
+            return;
+        }
 
         var dialog = await DialogService.ShowMessageBox(
             "Usuń trening",

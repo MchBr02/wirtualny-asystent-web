@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using static Client_ui.Domain.DTO.AddExercises;
-
 namespace Client_ui.Domain.DTO
 {
     public class AddWorkoutDTO
@@ -12,7 +11,9 @@ namespace Client_ui.Domain.DTO
         public int WorkoutQuality { get; set; }
         public TimeSpan WorkoutTime { get; set; }
         public DateTime WorkoutDate { get; set; }
+        public Guid UserId { get; set; } // Add this property for user association
     }
+
     public class UpdateWorkoutDTO
     {
         public Guid Id { get; set; }
@@ -22,7 +23,9 @@ namespace Client_ui.Domain.DTO
         public TimeSpan WorkoutTime { get; set; }
         public DateTime WorkoutDate { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid UserId { get; set; }
     }
+
     public class WorkoutDTOs
     {
         public Guid Id { get; set; }
@@ -45,9 +48,9 @@ namespace Client_ui.Domain.DTO
         }
         public ICollection<ExerciseDTOs> Exercises { get; set; } = new List<ExerciseDTOs>();
         public TimeSpan WorkoutTime { get; set; }
-
         public DateTime WorkoutDate { get; set; }
         [Required]
         public string Url { get; set; } = default!;
+        public Guid UserId { get; set; }
     }
 }

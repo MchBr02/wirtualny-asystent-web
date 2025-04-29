@@ -7,5 +7,6 @@ namespace Client_ui.Persistance
         public WorkoutAppDbContext(DbContextOptions<WorkoutAppDbContext> optionsBuilder):base(optionsBuilder) { }
         public DbSet<Workout> Workouts { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }

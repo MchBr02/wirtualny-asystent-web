@@ -12,20 +12,20 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Client_ui.Migrations
 {
     [DbContext(typeof(WorkoutAppDbContext))]
-    [Migration("20250311132625_UpdateDatabaseThird")]
-    partial class UpdateDatabaseThird
+    [Migration("20250428124716_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Client_ui.Domain.DTO.AddExercises+ExerciseDTOs", b =>
+            modelBuilder.Entity("Client_ui.Domain.Exercise", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,9 +34,6 @@ namespace Client_ui.Migrations
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<float>("ExeciseWeight")
-                        .HasColumnType("real");
 
                     b.Property<string>("ExerciseName")
                         .IsRequired()
@@ -51,59 +48,46 @@ namespace Client_ui.Migrations
                     b.Property<int>("ExerciseSets")
                         .HasColumnType("int");
 
-                    b.Property<TimeOnly>("ExerciseTime")
+                    b.Property<TimeSpan>("ExerciseTime")
                         .HasColumnType("time");
 
-                    b.Property<Guid?>("WorkoutId")
+                    b.Property<float>("ExerciseVolume")
+                        .HasColumnType("real");
+
+                    b.Property<float>("ExerciseWeight")
+                        .HasColumnType("real");
+
+                    b.Property<Guid>("WorkoutId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("WorkoutId");
 
-                    b.ToTable("ExerciseDTOs");
+                    b.ToTable("Exercises");
                 });
 
-            modelBuilder.Entity("Client_ui.Domain.Exercise", b =>
+            modelBuilder.Entity("Client_ui.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ExcersiseQuality")
-                        .HasColumnType("int");
-
-                    b.Property<float>("ExeciseWeight")
-                        .HasColumnType("real");
-
-                    b.Property<string>("ExerciseName")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ExerciseReps")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExerciseSets")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("ExerciseTime")
-                        .HasColumnType("time");
-
-                    b.Property<float>("ExerciseVolume")
-                        .HasColumnType("real");
-
-                    b.Property<Guid>("WorkoutFK")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkoutFK");
-
-                    b.ToTable("Exercises");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Client_ui.Domain.Workout", b =>
@@ -112,8 +96,11 @@ namespace Client_ui.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly>("WorkoutDate")
-                        .HasColumnType("date");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("WorkoutDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("WorkoutName")
                         .IsRequired()
@@ -122,7 +109,7 @@ namespace Client_ui.Migrations
                     b.Property<int>("WorkoutQuality")
                         .HasColumnType("int");
 
-                    b.Property<TimeOnly>("WorkoutTime")
+                    b.Property<TimeSpan>("WorkoutTime")
                         .HasColumnType("time");
 
                     b.Property<float>("WorkoutVolume")
@@ -130,25 +117,31 @@ namespace Client_ui.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Workouts");
-                });
+                    b.HasIndex("UserId");
 
-            modelBuilder.Entity("Client_ui.Domain.DTO.AddExercises+ExerciseDTOs", b =>
-                {
-                    b.HasOne("Client_ui.Domain.Workout", null)
-                        .WithMany("Exercises")
-                        .HasForeignKey("WorkoutId");
+                    b.ToTable("Workouts");
                 });
 
             modelBuilder.Entity("Client_ui.Domain.Exercise", b =>
                 {
                     b.HasOne("Client_ui.Domain.Workout", "Workout")
-                        .WithMany()
-                        .HasForeignKey("WorkoutFK")
+                        .WithMany("Exercises")
+                        .HasForeignKey("WorkoutId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Workout");
+                });
+
+            modelBuilder.Entity("Client_ui.Domain.Workout", b =>
+                {
+                    b.HasOne("Client_ui.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Client_ui.Domain.Workout", b =>

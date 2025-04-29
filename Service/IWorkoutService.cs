@@ -10,6 +10,7 @@ namespace Client_ui.Service
         Task CreteWorkoutAsync(AddWorkoutDTO addWorkoutDTO);
         Task UpdateWorkoutAsync(UpdateWorkoutDTO updateWorkoutDTO);
         Task DeleteWorkoutAsync(Guid id);
+        Task<IEnumerable<WorkoutDTOs>> GetWorkoutsByUserIdAsync(Guid userId);
         Task<Dictionary<string, int>> GetMonthlyWorkoutCountAsync();
 
     }

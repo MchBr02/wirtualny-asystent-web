@@ -1,9 +1,23 @@
-﻿
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Client_ui.Components.Authorization
+
+<AuthorizeView>
 <MudNavMenu>
     <MudNavLink Href="Workout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Workout</MudNavLink>
 </MudNavMenu>
+</AuthorizeView>
+<AuthorizeView>
 <MudNavMenu>
-    <MudNavLink Href="Analiza" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Analzia</MudNavLink>
+    <MudNavLink Href="Analiza" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Analiza</MudNavLink>
 </MudNavMenu>
+</AuthorizeView>
+<AuthorizeView>
+<MudNavMenu>
+    <MudNavLink Href="Chat" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Zapytaj AI</MudNavLink>
+</MudNavMenu>
+</AuthorizeView>
+    
 
-
+@code {
+    
+}

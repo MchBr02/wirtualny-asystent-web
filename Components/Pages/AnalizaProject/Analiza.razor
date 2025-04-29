@@ -19,11 +19,11 @@
 </div>
 
 @code {
-    // Lista danych do wykresu
+
     private List<ChartData> monthlyData = new();
 
     protected override async Task OnInitializedAsync()
-    {
+    { 
         // Wywołujemy metodę serwisu, która zwraca słownik { miesiąc, liczba treningów }
         var dict = await WorkoutService.GetMonthlyWorkoutCountAsync();
         // Konwertujemy słownik na listę danych dla wykresu
@@ -35,12 +35,5 @@
                 })
             .OrderBy(data => data.Month) // opcjonalnie sortujemy
             .ToList();
-    }
-
-    // Prosty model danych do wykresu
-    public class ChartData
-    {
-        public string Month { get; set; } = string.Empty;
-        public int Count { get; set; }
     }
 }

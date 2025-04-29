@@ -12,6 +12,11 @@ namespace Client_ui.Domain
         [Key]
         public Guid Id { get; set; }
         [Required]
+
+        [ForeignKey("User")]
+        public Guid UserId { get; set; }
+        public User? User { get; set; }
+
         public string WorkoutName { get; set; } = default!;
         public int WorkoutQuality { get; set; }
         public float WorkoutVolume { get; set; }
