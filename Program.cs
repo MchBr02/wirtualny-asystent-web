@@ -29,10 +29,12 @@ builder.Services.AddRazorComponents(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
-
+//APEX CHART
+builder.Services.AddApexCharts();
 
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
+builder.Services.AddScoped<IChartService, ChartService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CustomAuthenticationService>();

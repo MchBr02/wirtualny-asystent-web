@@ -10,12 +10,11 @@
 @inject AuthenticationStateProvider AuthStateProvider
 
 
-        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
-            <p>@currentUserId</p>
-            <MudPaper Class="pa-4" Elevation="3">
-                <MudGrid>
-                    <MudItem xs="12" Class="d-flex justify-space-between align-center mb-4">
-                        <MudText Typo="Typo.h4" Class="mb-0">Lista Treningów</MudText>
+        <MudContainer  MaxWidth="MaxWidth.Large" Class="mt-16">
+    <MudPaper Class="pa-4" Elevation="3" Style="background-color:#1a1a27;">
+                <MudGrid >
+                    <MudItem  xs="12" Class="d-flex justify-space-between align-center mb-4">
+                        <MudText style="color:white;" Typo="Typo.h4" Class="mb-0">Lista Treningów</MudText>
                         <MudButton Variant="Variant.Filled"
                                 Color="Color.Primary"
                                 Size="Size.Large"
@@ -45,6 +44,7 @@
                         else
                         {
                             <MudTable T="WorkoutDTOs"
+                              
                                     Items="@workoutDTOs"
                                     Hover="true"
                                     Bordered="true"
@@ -81,6 +81,8 @@
                 </MudGrid>
             </MudPaper>
         </MudContainer>
+        @if (currentUserId == Guid.Empty)
+        {
         <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
             <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
                 Musisz się zalogować, aby zobaczyć treningi.
@@ -89,7 +91,7 @@
                 Przejdź do logowania
             </MudButton>
         </MudContainer>
-
+        }
 
 @code {
     private bool _loading = true;
@@ -184,7 +186,6 @@
             Snackbar.Add("Nie masz uprawnień do edycji tego treningu", Severity.Warning);
             return;
         }
-
         selectedWorkout = workout;
         var parameters = new DialogParameters
         {

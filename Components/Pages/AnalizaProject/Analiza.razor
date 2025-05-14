@@ -5,35 +5,28 @@
 @using System.Threading.Tasks
 @using Client_ui.Domain.DTO
 @using Client_ui.Service
-@inject IWorkoutService WorkoutService
-
-<div>
-    <ApexChart TItem="ChartData" Title="Liczba treningów w miesiącu">
-        <ApexPointSeries TItem="ChartData"
-                         Items="@monthlyData"
-                         SeriesType="@SeriesType.Bar"
-                         Name="Treningi"
-                         XValue="@(data => data.Month)"
-                         YValue="@(data => data.Count)" />
-    </ApexChart>
-</div>
-
+@using ApexCharts
+@using Client_ui.Domain.DTO
+@inject IChartService ChartService
+<MudGrid>
+    <MudItem xs="12" md="9" lg="8">
+        <ApexChart TItem="ChartData"
+        Title="Liczba Trenningów w miesiącu">
+            <ApexPointSeries TItem="ChartData"
+            Items="monthlyData"
+            Name="Net Profit"
+            SeriesType="SeriesType.Area"
+            XValue="e => e.Month"
+            YValue="e=> e.Count" />
+        </ApexChart>
+    </MudItem>
+</MudGrid>
 @code {
-
-    private List<ChartData> monthlyData = new();
+    private List<ChartData> monthlyData { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
-    { 
-        // Wywołujemy metodę serwisu, która zwraca słownik { miesiąc, liczba treningów }
-        var dict = await WorkoutService.GetMonthlyWorkoutCountAsync();
-        // Konwertujemy słownik na listę danych dla wykresu
-        monthlyData = dict
-            .Select(kvp => new ChartData
-                {
-                    Month = kvp.Key,
-                    Count = kvp.Value
-                })
-            .OrderBy(data => data.Month) // opcjonalnie sortujemy
-            .ToList();
+    {
+        var data = await ChartService.GetAllWorkoutsInMonth();
+        monthlyData = data.ToList();
     }
 }
