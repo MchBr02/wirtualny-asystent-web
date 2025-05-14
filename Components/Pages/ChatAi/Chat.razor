@@ -1,83 +1,97 @@
 ﻿@page "/Chat"
+@using Client_ui.Domain.DTO
+@using Client_ui.Service
+@inject IChatService ChatService
 @inject ISnackbar Snackbar
 
-@{
-    var orderedGroups = messages
-        .OrderByDescending(m => m.Time)
-        .GroupBy(m => m.Name)
-        .ToList();
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Test komunikacji z ChatService</MudText>
+        </MudCardHeader>
 
-    for (int i = 0; i < orderedGroups.Count; i++)
-    {
-        var group = orderedGroups[i];
-        var position = i == 0 ? ChatBubblePosition.Start : ChatBubblePosition.End;
+        <MudCardContent>
+            <MudTextField @bind-Value="messageText" Label="Wiadomość" Variant="Variant.Outlined" />
 
-        <MudChat ChatPosition="@position">
-            <MudAvatar>@group.First().Initials</MudAvatar>
-            <MudChatHeader Name="@group.Key" Time="@group.First().Time" />
-            @foreach (var message in group.OrderByDescending(m => m.Time))
+            <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="SendMessage" StartIcon="@Icons.Material.Filled.Send">
+                Wyślij wiadomość
+            </MudButton>
+
+            <MudButton Class="mt-3 ml-2" Variant="Variant.Outlined" Color="Color.Secondary"
+                       OnClick="RunTest">
+                Wyślij testowe żądanie
+            </MudButton>
+
+            @if (_result is not null)
             {
-                <MudChatBubble OnClick="(MouseEventArgs args) => ClickMessage(args, message)"
-                               OnContextClick="(MouseEventArgs args) => RightClickMessage(args, message)">
-                    @message.Text
-                </MudChatBubble>
+                <MudPaper Class="pa-4 mt-4" Elevation="3">
+                    <MudText Typo="Typo.subtitle1">Odpowiedź serwera:</MudText>
+                    <MudText Class="mt-2">@_result</MudText>
+                </MudPaper>
             }
-        </MudChat>
-    }
-}
 
-<MudMenu PositionAtCursor="true" @ref="_contextMenu" id="_contextMenu">
-    <MudMenuItem Icon="@Icons.Material.Filled.Block" OnClick="@BanUser">
-        Ban @_selectedMessage?.Name
-    </MudMenuItem>
-    <MudMenuItem Icon="@Icons.Material.Filled.Info" OnClick="@ShowHiddenInfo">
-        View Details for @_selectedMessage?.Name
-    </MudMenuItem>
-</MudMenu>
+            @if (chatMessages.Count > 0)
+            {
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.h6">Historia wiadomości</MudText>
+
+                <MudPaper Class="pa-3 mt-2" Elevation="0" Style="max-height: 300px; overflow-y: auto;">
+                    @foreach (var msg in chatMessages)
+                    {
+                        <MudPaper Class="pa-3 mb-2" Elevation="1">
+                            <MudText>@msg</MudText>
+                        </MudPaper>
+                    }
+                </MudPaper>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
 
 @code {
-#nullable enable
-    private List<Message> messages = new();
-    private Message? _selectedMessage;
-    private MudMenu? _contextMenu;
+    private string? _result;
+    private string messageText = "";
+    private List<string> chatMessages = new List<string>();
 
-    protected override void OnInitialized()
-    {
-        messages.Add(new Message("Obi-Wan Kenobi", "OK", "You were my brother Anakin.", "2 hours ago"));
-        messages.Add(new Message("Obi-Wan Kenobi", "OK", "I loved you.", "2 hours ago"));
-        messages.Add(new Message("Anakin Skywalker", "AS", "I'm sorry.", "1 hour ago"));
-    }
+    protected override Task OnInitializedAsync() => Task.CompletedTask;
 
-    private void ShowHiddenInfo()
+    private async Task RunTest()
     {
-        if (_selectedMessage is not null)
+        try
         {
-            Snackbar.Add($"Hidden information for {_selectedMessage.Name}", Severity.Info);
+            Snackbar.Add("Wysyłanie testowego żądania...", Severity.Info);
+            _result = await ChatService.TestPOST();
+            chatMessages.Add($"Test: {_result}");
+            Snackbar.Add("Test zakończony sukcesem!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            _result = $"Błąd: {ex.Message}";
+            Snackbar.Add("Test zakończony niepowodzeniem!", Severity.Error);
         }
     }
 
-    private void BanUser()
+    private async Task SendMessage()
     {
-        if (_selectedMessage is not null)
+        if (string.IsNullOrWhiteSpace(messageText))
         {
-            Snackbar.Add($"{_selectedMessage.Name} has been banned!", Severity.Error);
+            Snackbar.Add("Wiadomość nie może być pusta", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            // Tutaj możesz zaimplementować wysyłanie niestandardowej wiadomości
+            // np. tworząc nową metodę w ChatService
+            chatMessages.Add($"Wysłano: {messageText}");
+            messageText = ""; // Wyczyść pole po wysłaniu
+
+            Snackbar.Add("Wiadomość wysłana!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Błąd: {ex.Message}", Severity.Error);
         }
     }
-
-    private async Task RightClickMessage(MouseEventArgs args, Message message)
-    {
-        _selectedMessage = message;
-        if (_contextMenu != null)
-            await _contextMenu.OpenMenuAsync(args);
-    }
-
-    private async Task ClickMessage(MouseEventArgs args, Message message)
-    {
-        _selectedMessage = message;
-        Snackbar.Add("Message clicked: " + message.Text, Severity.Info);
-        await Task.CompletedTask;
-    }
-
-
-    private record Message(string Name, string Initials, string Text, string Time);
 }
