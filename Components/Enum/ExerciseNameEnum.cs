@@ -36,6 +36,5 @@
         Skłony_na_ławce_poziomej_z_obciążeniem,
         Skłony_na_ławce_skosnej_z_obrótami_i_obciążeniem,
         Skłony_na_ławce_poziomej_z_obrótami_i_obciążeniem,
-
     }
 }

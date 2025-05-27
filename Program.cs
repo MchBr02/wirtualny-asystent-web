@@ -30,6 +30,14 @@ builder.Services.AddRazorComponents(options =>
 builder.Services.AddAntiforgery();
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
+// Dodaj MongoDB Driver
+builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
+
+// Dodaj HttpClient dla Raspberry Pi
+builder.Services.AddHttpClient<IRPComunnicationService, RPComunnicationService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 //APEX CHART
 builder.Services.AddApexCharts();
 builder.Services.AddHttpClient();

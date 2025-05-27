@@ -1,97 +1,267 @@
 ﻿@page "/Chat"
+@using Microsoft.AspNetCore.Components.Web
 @using Client_ui.Domain.DTO
 @using Client_ui.Service
 @inject IChatService ChatService
+@inject IMongoDbService MongoDbService
+@inject IRPComunnicationService RaspberryPiService
 @inject ISnackbar Snackbar
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
-    <MudCard>
-        <MudCardHeader>
-            <MudText Typo="Typo.h5">Test komunikacji z ChatService</MudText>
-        </MudCardHeader>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudGrid>
+        <!-- Panel główny chatu -->
+        <MudItem xs="12" md="8">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h5">Chat z Raspberry Pi</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="TestConnections">
+                        Test połączeń
+                    </MudButton>
+                </MudCardHeader>
+                <MudCardContent>
+                    <!-- Historia wiadomości -->
+                    <MudPaper Class="pa-3 mb-4" Elevation="1" Style="height: 400px; overflow-y: auto;">
+                        @if (chatMessages.Count == 0)
+                        {
+                            <MudText Class="text-center text-muted">Brak wiadomości. Rozpocznij konwersację!</MudText>
+                        }
+                        else
+                        {
+                            @foreach (var msg in chatMessages)
+                            {
+                                <MudPaper Class="pa-3 mb-2" Elevation="2"
+                                          Style="@(msg.StartsWith("Ty:") ? "background-color: #e3f2fd;" : "background-color: #f5f5f5;")">
+                                    <MudText>@msg</MudText>
+                                    <MudText Typo="Typo.caption" Class="text-muted">
+                                        @DateTime.Now.ToString("HH:mm")
+                                    </MudText>
+                                </MudPaper>
+                            }
+                        }
+                    </MudPaper>
 
-        <MudCardContent>
-            <MudTextField @bind-Value="messageText" Label="Wiadomość" Variant="Variant.Outlined" />
+                    <!-- Pole wprowadzania wiadomości -->
+                    <MudTextField @bind-Value="messageText"
+                                  Label="Napisz wiadomość o treningach..."
+                                  Variant="Variant.Outlined"
+                                  @onkeypress="HandleKeyPress"
+                                  Disabled="@isLoading" />
 
-            <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary"
-                       OnClick="SendMessage" StartIcon="@Icons.Material.Filled.Send">
-                Wyślij wiadomość
-            </MudButton>
+                    <MudButton Class="mt-3"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Send"
+                               OnClick="SendMessage"
+                               Disabled="@(isLoading || string.IsNullOrWhiteSpace(messageText))">
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" />
+                            <span class="ml-2">Wysyłanie...</span>
+                        }
+                        else
+                        {
+                            <span>Wyślij</span>
+                        }
+                    </MudButton>
 
-            <MudButton Class="mt-3 ml-2" Variant="Variant.Outlined" Color="Color.Secondary"
-                       OnClick="RunTest">
-                Wyślij testowe żądanie
-            </MudButton>
+                    <!-- Przyciski szybkich akcji -->
+                    <MudPaper Class="pa-3 mt-4" Elevation="0">
+                        <MudText Typo="Typo.subtitle2" Class="mb-2">Szybkie komendy:</MudText>
+                        <MudButton Class="mr-2 mb-2" Variant="Variant.Outlined" Size="Size.Small"
+                                   OnClick="@(() => SendQuickMessage("!stats"))">
+                            Moje statystyki
+                        </MudButton>
+                        <MudButton Class="mr-2 mb-2" Variant="Variant.Outlined" Size="Size.Small"
+                                   OnClick="@(() => SendQuickMessage("!add_training siłownia 45"))">
+                            Dodaj trening
+                        </MudButton>
+                        <MudButton Class="mr-2 mb-2" Variant="Variant.Outlined" Size="Size.Small"
+                                   OnClick="@(() => SendQuickMessage("!exercises"))">
+                            Lista ćwiczeń
+                        </MudButton>
+                        <MudButton Class="mr-2 mb-2" Variant="Variant.Outlined" Size="Size.Small"
+                                   OnClick="@(() => SendQuickMessage("!help"))">
+                            Pomoc
+                        </MudButton>
+                    </MudPaper>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
-            @if (_result is not null)
-            {
-                <MudPaper Class="pa-4 mt-4" Elevation="3">
-                    <MudText Typo="Typo.subtitle1">Odpowiedź serwera:</MudText>
-                    <MudText Class="mt-2">@_result</MudText>
-                </MudPaper>
-            }
+        <!-- Panel boczny z historią MongoDB -->
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Historia MongoDB</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="LoadMongoMessages">
+                        Odśwież
+                    </MudButton>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudPaper Class="pa-2" Elevation="0" Style="height: 300px; overflow-y: auto;">
+                        @if (mongoMessages.Count == 0)
+                        {
+                            <MudText Class="text-center text-muted">Ładowanie...</MudText>
+                        }
+                        else
+                        {
+                            @foreach (var msg in mongoMessages.Take(20))
+                            {
+                                <MudPaper Class="pa-2 mb-1" Elevation="1">
+                                    <MudText Typo="Typo.body2"><strong>@msg.Sender:</strong></MudText>
+                                    <MudText Typo="Typo.body2">@msg.Content</MudText>
+                                    <MudText Typo="Typo.caption" Class="text-muted">
+                                        @msg.Timestamp.ToString("dd.MM HH:mm")
+                                    </MudText>
+                                </MudPaper>
+                            }
+                        }
+                    </MudPaper>
+                </MudCardContent>
+            </MudCard>
 
-            @if (chatMessages.Count > 0)
-            {
-                <MudDivider Class="my-4" />
-                <MudText Typo="Typo.h6">Historia wiadomości</MudText>
-
-                <MudPaper Class="pa-3 mt-2" Elevation="0" Style="max-height: 300px; overflow-y: auto;">
-                    @foreach (var msg in chatMessages)
-                    {
-                        <MudPaper Class="pa-3 mb-2" Elevation="1">
-                            <MudText>@msg</MudText>
-                        </MudPaper>
-                    }
-                </MudPaper>
-            }
-        </MudCardContent>
-    </MudCard>
+            <!-- Status połączeń -->
+            <MudCard Class="mt-3">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h6">Status połączeń</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText T="string">MongoDB: @(mongoConnectionStatus ? "Połączono" : "Błąd")</MudText>
+                    <MudText T="string" Class="ml-2">Raspberry Pi: @(raspberryConnectionStatus ? "Połączono" : "Błąd")</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 </MudContainer>
 
 @code {
-    private string? _result;
     private string messageText = "";
     private List<string> chatMessages = new List<string>();
+    private List<MessageDto> mongoMessages = new List<MessageDto>();
+    private bool isLoading = false;
+    private bool mongoConnectionStatus = false;
+    private bool raspberryConnectionStatus = false;
 
-    protected override Task OnInitializedAsync() => Task.CompletedTask;
-
-    private async Task RunTest()
+    protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            Snackbar.Add("Wysyłanie testowego żądania...", Severity.Info);
-            _result = await ChatService.TestPOST();
-            chatMessages.Add($"Test: {_result}");
-            Snackbar.Add("Test zakończony sukcesem!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            _result = $"Błąd: {ex.Message}";
-            Snackbar.Add("Test zakończony niepowodzeniem!", Severity.Error);
-        }
+        await LoadMongoMessages();
+        await TestConnections();
     }
 
     private async Task SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(messageText))
-        {
-            Snackbar.Add("Wiadomość nie może być pusta", Severity.Warning);
+        if (string.IsNullOrWhiteSpace(messageText) || isLoading)
             return;
-        }
+
+        isLoading = true;
+        var userMessage = messageText;
+        messageText = "";
+
+        // Dodaj wiadomość użytkownika do historii
+        chatMessages.Add($"Ty: {userMessage}");
+        StateHasChanged();
 
         try
         {
-            // Tutaj możesz zaimplementować wysyłanie niestandardowej wiadomości
-            // np. tworząc nową metodę w ChatService
-            chatMessages.Add($"Wysłano: {messageText}");
-            messageText = ""; // Wyczyść pole po wysłaniu
+            // Wyślij do Raspberry Pi
+            var response = await RaspberryPiService.SendMessageAsync(userMessage);
+            chatMessages.Add($"Bot: {response.response}");
 
-            Snackbar.Add("Wiadomość wysłana!", Severity.Success);
+            // Opcjonalnie: zapisz do MongoDB
+            if (response.success)
+            {
+                await SaveMessageToMongo(userMessage, response.response);
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Błąd: {ex.Message}", Severity.Error);
+            chatMessages.Add($"Błąd: {ex.Message}");
+            Snackbar.Add($"Wystąpił błąd: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SendQuickMessage(string message)
+    {
+        messageText = message;
+        await SendMessage();
+    }
+
+    private async Task LoadMongoMessages()
+    {
+        try
+        {
+            mongoMessages = await MongoDbService.GetMessagesAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Błąd ładowania wiadomości: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TestConnections()
+    {
+        mongoConnectionStatus = await MongoDbService.TestConnectionAsync();
+        raspberryConnectionStatus = await RaspberryPiService.TestConnectionAsync();
+
+        if (mongoConnectionStatus && raspberryConnectionStatus)
+        {
+            Snackbar.Add("Wszystkie połączenia działają!", Severity.Success);
+        }
+        else
+        {
+            var errors = new List<string>();
+            if (!mongoConnectionStatus) errors.Add("MongoDB");
+            if (!raspberryConnectionStatus) errors.Add("Raspberry Pi");
+            Snackbar.Add($"Błędy połączeń: {string.Join(", ", errors)}", Severity.Warning);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task SaveMessageToMongo(string userMessage, string botResponse)
+    {
+        try
+        {
+            // Zapisz wiadomość użytkownika
+            await MongoDbService.AddMessageAsync(new MessageDto
+            {
+                MessageId = Guid.NewGuid().ToString(),
+                Content = userMessage,
+                Sender = "blazor_user",
+                Receiver = "raspberry_bot",
+                Platform = "Blazor_Chat"
+            });
+
+            // Zapisz odpowiedź bota
+            await MongoDbService.AddMessageAsync(new MessageDto
+            {
+                MessageId = Guid.NewGuid().ToString(),
+                Content = botResponse,
+                Sender = "raspberry_bot",
+                Receiver = "blazor_user",
+                Platform = "Blazor_Chat"
+            });
+        }
+        catch (Exception ex)
+        {
+            // Nie przerywamy działania chatu z powodu błędu zapisu
+            Console.WriteLine($"Błąd zapisu do MongoDB: {ex.Message}");
         }
     }
 }

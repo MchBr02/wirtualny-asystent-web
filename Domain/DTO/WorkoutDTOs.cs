@@ -11,7 +11,7 @@ namespace Client_ui.Domain.DTO
         public int WorkoutQuality { get; set; }
         public TimeSpan WorkoutTime { get; set; }
         public DateTime WorkoutDate { get; set; }
-        public Guid UserId { get; set; } // Add this property for user association
+        public Guid UserId { get; set; } 
     }
 
     public class UpdateWorkoutDTO

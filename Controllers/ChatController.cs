@@ -16,20 +16,5 @@ namespace Client_ui.Controllers
             _customAuthenticationService = customAuthenticationService;
             _chatService = chatService;
         }
-        [HttpPost("test")]
-        public async Task<IActionResult> Test()
-        {
-            var result = await _chatService.TestPOST();
-            return Ok(result);
-        }
-        //[Route("api/Chat")]
-        [HttpPost("receive")]
-        [IgnoreAntiforgeryToken]
-        public IActionResult ReciveMessage([FromBody] MessageDTO dto)
-        {
-            //var result = _chatService.TestGET();
-            //return Ok(result);
-            return Ok(new { received = dto.Message });
-        }
     }
 }

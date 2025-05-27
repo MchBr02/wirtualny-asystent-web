@@ -72,14 +72,14 @@ namespace Client_ui.Service
             }
         }
 
-        // New method to get workouts for a specific user
+
         public async Task<IEnumerable<WorkoutDTOs>> GetWorkoutsByUserIdAsync(Guid userId)
         {
             try
             {
                 var workouts = await _workoutAppDbContext.Workouts
                     .Include(w => w.Exercises)
-                    .Where(w => w.UserId == userId) // Filter by user ID
+                    .Where(w => w.UserId == userId) 
                     .ToListAsync();
 
                 Console.WriteLine($"Znaleziono {workouts.Count} treningów dla użytkownika {userId}");
@@ -176,7 +176,7 @@ namespace Client_ui.Service
                 workout.WorkoutDate = updateWorkoutDTO.WorkoutDate;
             }
 
-            await _workoutAppDbContext.SaveChangesAsync(); // Add this line to actually save changes
+            await _workoutAppDbContext.SaveChangesAsync(); 
         }
 
         public async Task DeleteWorkoutAsync(Guid id)

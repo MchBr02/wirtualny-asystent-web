@@ -7,23 +7,17 @@ using System.Threading.Tasks;
 
 namespace Client_ui.Service
 {
- 
+
     public class ChatService : IChatService
     {
         private readonly HttpClient _httpClient;
-        private readonly JsonSerializerOptions _jsonOptions;
 
         public ChatService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = true
-            };
         }
 
-        public async Task<string> TestGET()
+        /*public async Task<string> TestGET()
         {
             var res = await _httpClient.GetAsync("api/security/test");
             res.EnsureSuccessStatusCode();
@@ -83,5 +77,6 @@ namespace Client_ui.Service
     public class MessageResponse
     {
         public string? Received { get; set; }
+    }*/
     }
 }
