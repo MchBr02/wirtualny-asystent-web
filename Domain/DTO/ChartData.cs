@@ -9,6 +9,6 @@
     {
         public string Month { get; set; } = string.Empty;
         public int Count { get; set; }
-        public float Volume { get; set; }
+        public decimal Volume { get; set; }
     }
 }

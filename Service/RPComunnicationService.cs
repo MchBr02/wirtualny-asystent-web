@@ -80,7 +80,7 @@ namespace Client_ui.Service
         {
             try
             {
-                // Test endpointu głównego Flask
+                // Test endpointu głównego 
                 var response = await _httpClient.GetAsync($"{_baseUrl}/");
                 return response.IsSuccessStatusCode;
             }

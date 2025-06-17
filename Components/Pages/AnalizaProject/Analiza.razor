@@ -1,32 +1,49 @@
 ﻿@page "/Analiza"
 @using ApexCharts
-@using System.Collections.Generic
-@using System.Linq
-@using System.Threading.Tasks
 @using Client_ui.Domain.DTO
 @using Client_ui.Service
-@using ApexCharts
-@using Client_ui.Domain.DTO
 @inject IChartService ChartService
+
 <MudGrid>
     <MudItem xs="12" md="9" lg="8">
         <ApexChart TItem="ChartData"
-        Title="Liczba Trenningów w miesiącu">
+                   Title="Liczba Treningów w miesiącu">
             <ApexPointSeries TItem="ChartData"
-            Items="monthlyData"
-            Name="Net Profit"
-            SeriesType="SeriesType.Area"
-            XValue="e => e.Month"
-            YValue="e=> e.Count" />
+                             Items="monthlyData"
+                             Name="Ilość Treningów"
+                             SeriesType="SeriesType.Bar"
+                             XValue="e => e.Month"
+                             YValue="e => e.Count" />
         </ApexChart>
     </MudItem>
 </MudGrid>
+
+<MudGrid Class="mt-8">
+    <MudItem xs="12" md="9" lg="8">
+        <ApexChart TItem="ChartDataWithVolume"
+                   Title="Objętość treningów w miesiącu">
+            <ApexPointSeries TItem="ChartDataWithVolume"
+                             Items="volumeData"
+                             Name="Objętość (kg)"
+                             SeriesType="SeriesType.Bar"
+                             XValue="e => e.Month"
+                             YValue="e => e.Volume" />
+        </ApexChart>
+    </MudItem>
+</MudGrid>
+
 @code {
-    private List<ChartData> monthlyData { get; set; } = new();
+    private List<ChartData> monthlyData = new();
+    private List<ChartDataWithVolume> volumeData = new();
 
     protected override async Task OnInitializedAsync()
     {
+        // Pobranie i przypisanie liczby treningów
         var data = await ChartService.GetAllWorkoutsInMonth();
         monthlyData = data.ToList();
+
+        // Pobranie i przypisanie objętości treningów
+        var volume = await ChartService.GetAllWorkoutsInMonthWithVolume();
+        volumeData = volume.ToList();
     }
 }

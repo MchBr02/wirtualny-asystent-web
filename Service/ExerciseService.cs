@@ -1,4 +1,5 @@
-﻿using Client_ui.Domain;
+﻿using Client_ui.Components.Enum;
+using Client_ui.Domain;
 using Client_ui.Domain.DTO;
 using Client_ui.Persistance;
 using Microsoft.EntityFrameworkCore;
@@ -184,60 +185,15 @@ namespace Client_ui.Service
 
         public IEnumerable<string> GetExercisesForCategory(string category)
         {
-            var exercises = category switch
-            {
-                "NARAMIENNE" => new[]
-                {
-                "Wyciskanie_sztangi_sprzed_głowy",
-                "Wyciskanie_sztangi_zza_głowy",
-                "Wyciskanie_hantli_siedząc",
-                "Wyciskanie_hantli_na_skosie_dodatnim",
-                "Unoszenie_hantli_bokiem"
-            },
-                "PIERSIOWE" => new[]
-                {
-                "Wyciskanie_sztangi_na_ławce_poziomej",
-                "Wyciskanie_sztangielek_na_ławce_poziomej",
-                "Wyciskanie_sztangi_na_ławce_skosnej_głową_w_górę",
-                "Wyciskanie_sztangielek_na_ławce_skosnej_głową_w_górę",
-                "Rozpiętki_na_ławce_poziomej",
-                "Rozpiętki_na_ławce_skosnej_głową_w_górę",
-                "Dipy_na_poręczach"
-            },
-                "GRZBIETU" => new[]
-                {
-                "Podciąganie_na_drążku_szerokim_uchwycie",
-                "Podciąganie_na_drążku_wąskim_uchwycie",
-                "Wiosłowanie_sztangą_w_opadzie",
-                "Wiosłowanie_hantlami_w_podporze",
-                "Wiosłowanie_sztangielkami_w_opadzie"
-            },
-                "NÓGI" => new[]
-                {
-                "Przysiady",
-                "Wykroki",
-                "Prostowanie_nóg_na_maszynie",
-                "Uginanie_nóg_na_maszynie",
-                "Wspięcia_na_palce_stojąc"
-            },
-                "BRZUCH" => new[]
-                {
-                "Skłony_na_ławce_skosnej",
-                "Skłony_na_ławce_poziomej",
-                "Skłony_na_ławce_skosnej_z_obrótami",
-                "Skłony_na_ławce_poziomej_z_obrótami",
-                "Skłony_na_ławce_skosnej_z_obciążeniem",
-                "Skłony_na_ławce_poziomej_z_obciążeniem",
-                "Skłony_na_ławce_skosnej_z_obrótami_i_obciążeniem",
-                "Skłony_na_ławce_poziomej_z_obrótami_i_obciążeniem"
-            },
-                _ => Array.Empty<string>()
-            };
+            if (!Enum.TryParse<CategoryExerciseEnum>(category, true, out var catEnum))
+                return Enumerable.Empty<string>();
 
-            Console.WriteLine($"Category: {category}");
-            Console.WriteLine($"Exercises count: {exercises.Count()}");
-            return exercises;
+            return Enum.GetValues<ExerciseNameEnum>()
+                       .Cast<ExerciseNameEnum>()
+                       .Where(e => e.GetCategory() == catEnum)
+                       .Select(e => e.ToDisplayString());
         }
+
 
         public async Task<IEnumerable<ExerciseDTOs>> GetAllExercises()
         {

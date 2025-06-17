@@ -123,22 +123,24 @@
 
     private async Task LoadWorkouts()
     {
-        //if (currentUserId == Guid.Empty)
-          //  return;
-            
         try
         {
             _loading = true;
             StateHasChanged();
-            
-            // Get workouts only for the current user
-            var workouts = await workoutService.GetWorkoutsByUserIdAsync(currentUserId);
-            workoutDTOs = workouts?.ToList() ?? new List<WorkoutDTOs>();
+
+            // Pobierz treningi użytkownika
+            var workouts = await workoutService.GetWorkoutsByUserIdAsync(currentUserId)
+                              ?? Enumerable.Empty<WorkoutDTOs>();
+
+            // Posortuj malejąco po dacie i przypisz do kolekcji widoku
+            workoutDTOs = workouts
+                .OrderByDescending(w => w.WorkoutDate)
+                .ToList();
         }
         catch (Exception ex)
         {
             Snackbar.Add("Nie udało się załadować treningów", Severity.Error);
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex);
         }
         finally
         {
@@ -146,6 +148,7 @@
             StateHasChanged();
         }
     }
+
 
     private async Task OpenDialogMenu()
     {
@@ -189,7 +192,8 @@
         selectedWorkout = workout;
         var parameters = new DialogParameters
         {
-            { "Workout", workout }
+            { "Workout", workout },
+            { "UserId", currentUserId  }
         };
 
         var dialog = await DialogService.ShowAsync<_EditWorkoutComponent>(

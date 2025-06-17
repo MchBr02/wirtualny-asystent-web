@@ -17,7 +17,7 @@
                     RequiredError="Nazwa treningu jest wymagana"
                     Class="mb-4" />
                 </MudItem>
-                <MudItem xs="12">
+                @*<MudItem xs="12">
                     <MudNumericField @bind-Value="workout.WorkoutQuality"
                     Label="Jakość Treningu"
                     Required="true"
@@ -25,15 +25,15 @@
                     Min="1"
                     Max="5"
                     Class="mb-4" />
-                </MudItem>
-                <MudItem xs="12">
+                </MudItem>*@
+                @*<MudItem xs="12">
                     <MudTextField Value="@timeString"
                     ValueChanged="@(new EventCallback<string>(this, OnTimeChangeAsync))"
                     Label="Czas Treningu (mm:ss)"
                     Required="true"
                     RequiredError="Czas treningu jest wymagany"
                     Class="mb-4" />
-                </MudItem>
+                </MudItem>*@
             </MudGrid>
         </MudForm>
     </DialogContent>

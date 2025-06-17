@@ -1,40 +1,101 @@
-﻿namespace Client_ui.Components.Enum
+﻿using Client_ui.Components.Enum;
+using System.ComponentModel;
+
+public enum ExerciseNameEnum
 {
-    public enum ExerciseNameEnum
-    {
-        //Naramienne
-        Wyciskanie_sztangi_sprzed_głowy,
-        Wyciskanie_sztangi_zza_głowy,
-        Wyciskanie_hantli_siedząc,
-        Wyciskanie_hantli_na_skosie_dodatnim,
-        Unoszenie_hantli_bokiem,
-        //Piersiowe
-        Wyciskanie_sztangi_na_ławce_poziomej,
-        Wyciskanie_sztangielek_na_ławce_poziomej,
-        Wyciskanie_sztangi_na_ławce_skosnej_głową_w_górę,
-        Wyciskanie_sztangielek_na_ławce_skosnej_głową_w_górę,
-        Rozpiętki_na_ławce_poziomej,
-        Rozpiętki_na_ławce_skosnej_głową_w_górę,
-        //Grzbietu
-        Podciąganie_na_drążku_szerokim_uchwycie,
-        Podciąganie_na_drążku_wąskim_uchwycie,
-        Wiosłowanie_sztangą_w_opadzie,
-        Wiosłowanie_hantlami_w_podporze,
-        Wiosłowanie_sztangielkami_w_opadzie,
-        //Nogi
-        Przysiady,
-        Wykroki,
-        Prostowanie_nóg_na_maszynie,
-        Uginanie_nóg_na_maszynie,
-        Wspięcia_na_palce_stojąc,
-        //brzuch
-        Skłony_na_ławce_skosnej,
-        Skłony_na_ławce_poziomej,
-        Skłony_na_ławce_skosnej_z_obrótami,
-        Skłony_na_ławce_poziomej_z_obrótami,
-        Skłony_na_ławce_skosnej_z_obciążeniem,
-        Skłony_na_ławce_poziomej_z_obciążeniem,
-        Skłony_na_ławce_skosnej_z_obrótami_i_obciążeniem,
-        Skłony_na_ławce_poziomej_z_obrótami_i_obciążeniem,
-    }
+    // Naramienne
+    [ExerciseCategory(CategoryExerciseEnum.Naramienne)]
+    Wyciskanie_sztangi_sprzed_głowy,
+
+    [ExerciseCategory(CategoryExerciseEnum.Naramienne)]
+    Wyciskanie_sztangi_zza_głowy,
+
+    [ExerciseCategory(CategoryExerciseEnum.Naramienne)]
+    Wyciskanie_hantli_siedząc,
+
+    [ExerciseCategory(CategoryExerciseEnum.Naramienne)]
+    Wyciskanie_hantli_na_skosie_dodatnim,
+
+    [ExerciseCategory(CategoryExerciseEnum.Naramienne)]
+    Unoszenie_hantli_bokiem,
+
+
+    // Piersiowe
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Wyciskanie_sztangi_na_ławce_poziomej,
+
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Wyciskanie_sztangielek_na_ławce_poziomej,
+
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Wyciskanie_sztangi_na_ławce_skosnej_głową_w_górę,
+
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Wyciskanie_sztangielek_na_ławce_skosnej_głową_w_górę,
+
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Rozpiętki_na_ławce_poziomej,
+
+    [ExerciseCategory(CategoryExerciseEnum.Piersiowe)]
+    Rozpiętki_na_ławce_skosnej_głową_w_górę,
+
+
+    // Grzbietu
+    [ExerciseCategory(CategoryExerciseEnum.Grzbietu)]
+    Podciąganie_na_drążku_szerokim_uchwycie,
+
+    [ExerciseCategory(CategoryExerciseEnum.Grzbietu)]
+    Podciąganie_na_drążku_wąskim_uchwycie,
+
+    [ExerciseCategory(CategoryExerciseEnum.Grzbietu)]
+    Wiosłowanie_sztangą_w_opadzie,
+
+    [ExerciseCategory(CategoryExerciseEnum.Grzbietu)]
+    Wiosłowanie_hantlami_w_podporze,
+
+    [ExerciseCategory(CategoryExerciseEnum.Grzbietu)]
+    Wiosłowanie_sztangielkami_w_opadzie,
+
+
+    // Nogi
+    [ExerciseCategory(CategoryExerciseEnum.Nogi)]
+    Przysiady,
+
+    [ExerciseCategory(CategoryExerciseEnum.Nogi)]
+    Wykroki,
+
+    [ExerciseCategory(CategoryExerciseEnum.Nogi)]
+    Prostowanie_nóg_na_maszynie,
+
+    [ExerciseCategory(CategoryExerciseEnum.Nogi)]
+    Uginanie_nóg_na_maszynie,
+
+    [ExerciseCategory(CategoryExerciseEnum.Nogi)]
+    Wspięcia_na_palce_stojąc,
+
+
+    // Brzuch
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_skosnej,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_poziomej,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_skosnej_z_obrótami,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_poziomej_z_obrótami,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_skosnej_z_obciążeniem,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_poziomej_z_obciążeniem,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_skosnej_z_obrótami_i_obciążeniem,
+
+    [ExerciseCategory(CategoryExerciseEnum.Brzuch)]
+    Skłony_na_ławce_poziomej_z_obrótami_i_obciążeniem,
 }
