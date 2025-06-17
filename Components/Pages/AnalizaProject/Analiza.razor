@@ -2,8 +2,9 @@
 @using ApexCharts
 @using Client_ui.Domain.DTO
 @using Client_ui.Service
+@using System.Linq
 @inject IChartService ChartService
-
+@inject IAuthService AuthService
 <MudGrid>
     <MudItem xs="12" md="9" lg="8">
         <ApexChart TItem="ChartData"
@@ -17,7 +18,6 @@
         </ApexChart>
     </MudItem>
 </MudGrid>
-
 <MudGrid Class="mt-8">
     <MudItem xs="12" md="9" lg="8">
         <ApexChart TItem="ChartDataWithVolume"
@@ -31,19 +31,25 @@
         </ApexChart>
     </MudItem>
 </MudGrid>
-
 @code {
     private List<ChartData> monthlyData = new();
     private List<ChartDataWithVolume> volumeData = new();
 
     protected override async Task OnInitializedAsync()
     {
-        // Pobranie i przypisanie liczby treningów
-        var data = await ChartService.GetAllWorkoutsInMonth();
-        monthlyData = data.ToList();
+        var userId = await AuthService.GetCurrentUserIdAsync();
 
-        // Pobranie i przypisanie objętości treningów
-        var volume = await ChartService.GetAllWorkoutsInMonthWithVolume();
-        volumeData = volume.ToList();
+        if (userId.HasValue)
+        {
+            // Pobierz dane wykresu dla aktualnego użytkownika
+            monthlyData = (await ChartService.GetAllWorkoutsInMonth(userId.Value)).ToList();
+            volumeData = (await ChartService.GetAllWorkoutsInMonthWithVolume(userId.Value)).ToList();
+        }
+        else
+        {
+            // Użytkownik nie jest zalogowany lub nie ma ID
+            monthlyData = new List<ChartData>();
+            volumeData = new List<ChartDataWithVolume>();
+        }
     }
 }

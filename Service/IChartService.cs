@@ -4,7 +4,8 @@ namespace Client_ui.Service
 {
     public interface IChartService
     {
-        Task<IEnumerable<ChartData>> GetAllWorkoutsInMonth();
-        Task<IEnumerable<ChartDataWithVolume>> GetAllWorkoutsInMonthWithVolume();
+        Task<IEnumerable<ChartData>> GetAllWorkoutsInMonth(Guid userId);
+        Task<IEnumerable<ChartDataWithVolume>> GetAllWorkoutsInMonthWithVolume(Guid userId);
+
     }
 }

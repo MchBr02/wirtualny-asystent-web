@@ -52,6 +52,7 @@ builder.Services.AddCors(opts =>
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddScoped<IChartService, ChartService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IChatService, ChatService>(client => {
     client.BaseAddress = new Uri("https://localhost:7069/");
 });
