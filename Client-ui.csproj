@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Client_ui</RootNamespace>
-    <AssemblyName>`$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+    <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
+	 <ScopedCssEnabled>true</ScopedCssEnabled>
   </PropertyGroup>
 
 

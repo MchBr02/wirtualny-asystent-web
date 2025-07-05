@@ -9,7 +9,7 @@ using ApexCharts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Client_ui.Components.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Client_ui.Controllers;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,17 +27,16 @@ builder.Services.AddRazorComponents(options =>
     options.TemporaryRedirectionUrlValidityDuration =
         TimeSpan.FromMinutes(7));
 
-builder.Services.AddAntiforgery();
+builder.Services.AddAntiforgery(options => {
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+});
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
-// Dodaj MongoDB Driver
-builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"/app/keys"))
+    .SetApplicationName("WirtualnyAsystent");
 
-// Dodaj HttpClient dla Raspberry Pi
-builder.Services.AddHttpClient<IRPComunnicationService, RPComunnicationService>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+
 //APEX CHART
 builder.Services.AddApexCharts();
 builder.Services.AddHttpClient();
@@ -53,13 +52,12 @@ builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddScoped<IChartService, ChartService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddHttpClient<IChatService, ChatService>(client => {
-    client.BaseAddress = new Uri("https://localhost:7069/");
-});
+builder.Services.AddHttpClient<IApiChatService, ApiChatService>();
+builder.Services.AddScoped<IApiChatService, ApiChatService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CustomAuthenticationService>();
-builder.Services.AddScoped<ChatController>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -71,7 +69,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();  
 }
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.MapControllers();
 app.UseAntiforgery();
